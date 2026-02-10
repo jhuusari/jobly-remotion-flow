@@ -7,7 +7,7 @@
     "dev": "tsx src/cli/run.ts",
     "build": "tsc -p tsconfig.json",
     "editor:api": "tsx src/editor/server.ts",
-    "editor:ui": "vite --config editor/vite.config.ts",
+    "editor:ui": "vite --host 0.0.0.0 --config editor/vite.config.ts",
     "editor": "concurrently -n API,UI -c cyan,magenta \"npm run editor:api\" \"npm run editor:ui\""
   },
   "dependencies": {

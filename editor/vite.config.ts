@@ -7,6 +7,8 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    host: '0.0.0.0',
+    allowedHosts: ['ops.jobly.fi'],
     proxy: {
       '/api': 'http://localhost:3300',
       '/assets': 'http://localhost:3300'
