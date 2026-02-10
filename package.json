@@ -1,0 +1,36 @@
+{
+  "name": "remotion-flow",
+  "private": true,
+  "version": "0.1.0",
+  "type": "commonjs",
+  "scripts": {
+    "dev": "tsx src/cli/run.ts",
+    "build": "tsc -p tsconfig.json",
+    "editor:api": "tsx src/editor/server.ts",
+    "editor:ui": "vite --config editor/vite.config.ts",
+    "editor": "concurrently -n API,UI -c cyan,magenta \"npm run editor:api\" \"npm run editor:ui\""
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "ajv-formats": "^2.1.1",
+    "cheerio": "^1.0.0",
+    "express": "^4.19.2",
+    "@remotion/bundler": "^4.0.271",
+    "@remotion/renderer": "^4.0.271",
+    "@remotion/google-fonts": "^4.0.271",
+    "@remotion/player": "^4.0.271",
+    "remotion": "^4.0.271",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "sharp": "^0.33.5"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.1",
+    "@vitejs/plugin-react": "^4.3.3",
+    "concurrently": "^9.1.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7"
+  }
+}

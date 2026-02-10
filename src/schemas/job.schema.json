@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Canonical Job",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_url", "title", "company", "description", "extracted_at", "raw_html_path"],
+  "properties": {
+    "job_id": {"type": "string"},
+    "source_url": {"type": "string", "format": "uri"},
+    "title": {"type": "string"},
+    "company": {"type": "string"},
+    "logo_url": {"type": "string", "format": "uri"},
+    "logo_path": {"type": "string"},
+    "logo_meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {"type": "number"},
+        "height": {"type": "number"}
+      }
+    },
+    "company_site": {"type": "string", "format": "uri"},
+    "language": {"type": "string"},
+    "brand_colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "primary": {"type": "string"},
+        "secondary": {"type": "string"},
+        "text": {"type": "string"},
+        "logo_bg": {"type": "string"}
+      }
+    },
+    "location": {"type": "string"},
+    "employment_type": {"type": "string"},
+    "seniority": {"type": "string"},
+    "salary": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+        "min": {"type": "number"},
+        "max": {"type": "number"},
+        "period": {"type": "string"}
+      }
+    },
+    "description": {"type": "string"},
+    "requirements": {"type": "array", "items": {"type": "string"}},
+    "benefits": {"type": "array", "items": {"type": "string"}},
+    "posted_date": {"type": "string", "format": "date-time"},
+    "extracted_at": {"type": "string", "format": "date-time"},
+    "raw_html_path": {"type": "string"}
+  }
+}

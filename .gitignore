@@ -1,0 +1,7 @@
+node_modules/
+artifacts/
+remotion-bundle/
+.DS_Store
+.env
+jingles/
+jobly_videoad_feed.json

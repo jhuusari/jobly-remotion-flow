@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Job Input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["jobs"],
+  "properties": {
+    "jobs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {"$ref": "#/definitions/jobInput"}
+    }
+  },
+  "definitions": {
+    "jobInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["job_url"],
+      "properties": {
+        "job_url": {"type": "string", "format": "uri"},
+        "job_id": {"type": ["string", "number"]},
+        "company": {"type": "string"},
+        "title": {"type": "string"},
+        "company_site": {"type": "string", "format": "uri"},
+        "published": {"type": "string"},
+        "job_ad_type": {"type": "string"},
+        "channel": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {"type": "string"},
+            "id": {"type": "string"}
+          }
+        },
+        "budget": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "currency": {"type": "string", "minLength": 3, "maxLength": 3},
+            "min": {"type": "number"},
+            "max": {"type": "number"}
+          }
+        }
+      }
+    }
+  }
+}
