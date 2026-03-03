@@ -49,9 +49,14 @@ Run in parallel (2 at a time):
 npm run dev -- --since-days 7 --limit 10 --concurrency 2
 ```
 
+Daily server run helper:
+```
+npm run pipeline:daily
+```
+
 ## Editor (No-Code Review UI)
 
-The editor lets you review artifacts, tweak text + colors, choose a jingle, preview live, and regenerate the MP4 + thumbnail.
+The editor lets you review artifacts, tweak text + colors, choose a jingle, preview live, regenerate the MP4 + thumbnail, and download the rendered files directly from the editor panel.
 
 Start the editor (API + UI):
 ```
@@ -170,6 +175,18 @@ Each render picks a random jingle.
 - `OPENAI_MODEL` (optional, defaults to `gpt-4.1`)
 - `SHOW_TIKTOK_GUIDES=1`
 - `SHOW_LOGO_DEBUG=1`
+
+## Cron (08:00 Daily)
+
+On the server, add a root cron entry so the pipeline fetches and renders recent jobs every day at 08:00:
+```
+0 8 * * * cd /opt/jobly && /opt/jobly/scripts/run-daily.sh >> /var/log/jobly-daily.log 2>&1
+```
+
+Edit cron:
+```
+crontab -e
+```
 
 ## Notes
 

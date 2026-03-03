@@ -313,6 +313,18 @@ export const App: React.FC = () => {
     };
   }, [detail, draft]);
 
+  const videoDownloadUrl = useMemo(() => {
+    if (!detail?.assets?.video_url) return null;
+    const version = detail.assets.video_version;
+    return version ? `${detail.assets.video_url}?v=${encodeURIComponent(version)}` : detail.assets.video_url;
+  }, [detail]);
+
+  const thumbnailDownloadUrl = useMemo(() => {
+    if (!detail?.assets?.thumbnail_url) return null;
+    const version = detail.assets.thumbnail_version;
+    return version ? `${detail.assets.thumbnail_url}?v=${encodeURIComponent(version)}` : detail.assets.thumbnail_url;
+  }, [detail]);
+
   return (
     <div className="app">
       <div className="layout">
@@ -545,6 +557,16 @@ export const App: React.FC = () => {
                     <button className="ghost" onClick={resetDraft} disabled={loading}>
                       Reset to Original
                     </button>
+                    {videoDownloadUrl ? (
+                      <a className="ghost-link" href={videoDownloadUrl} download>
+                        Download MP4
+                      </a>
+                    ) : null}
+                    {thumbnailDownloadUrl ? (
+                      <a className="ghost-link" href={thumbnailDownloadUrl} download>
+                        Download Thumbnail
+                      </a>
+                    ) : null}
                   </div>
                   <button className="primary" onClick={regenerate} disabled={loading}>
                     {loading ? 'Rendering…' : 'Regenerate MP4 + Thumbnail'}

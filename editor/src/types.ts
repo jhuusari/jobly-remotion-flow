@@ -19,6 +19,8 @@ export type ArtifactDetail = {
     logo_url?: string | null;
     video_url?: string | null;
     thumbnail_url?: string | null;
+    video_version?: string | null;
+    thumbnail_version?: string | null;
   };
   jingles: string[];
 };

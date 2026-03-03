@@ -316,6 +316,17 @@ body {
   cursor: pointer;
 }
 
+.ghost-link {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+}
+
 .color-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
