@@ -17,10 +17,10 @@ export async function extractBrandColors(companySite?: string, logoPath?: string
   const defaultPrimary = '#ED2D26';
   const defaultSecondary = '#F4817D';
 
-  const detectedPrimary = normalizePrimary(siteColors.primary || logoColors.primary);
+  const detectedPrimary = pickDetectedPrimary(siteColors.primary, logoColors.primary);
   const primary = detectedPrimary || defaultPrimary;
   const secondary = detectedPrimary
-    ? (normalizePrimary(siteColors.secondary || logoColors.secondary) || adjustColor(primary, -0.12))
+    ? (pickDetectedPrimary(siteColors.secondary, logoColors.secondary) || adjustColor(primary, -0.12))
     : defaultSecondary;
   const text = ensureReadableText(primary);
   const logo_bg = siteColors.logo_bg || logoColors.logo_bg || '#FFFFFF';
@@ -31,6 +31,12 @@ export async function extractBrandColors(companySite?: string, logoPath?: string
     text,
     logo_bg
   };
+}
+
+function pickDetectedPrimary(siteColor?: string, logoColor?: string): string | undefined {
+  const normalizedSite = normalizePrimary(siteColor);
+  if (normalizedSite) return normalizedSite;
+  return normalizePrimary(logoColor);
 }
 
 function pickLogoSource(logoPath?: string): string | undefined {
