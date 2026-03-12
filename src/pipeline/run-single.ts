@@ -28,14 +28,18 @@ export async function runSingle(input: InputPayload): Promise<RunSingleResult> {
       company_site: input.company_site
     });
 
+    const explicitCompanyLogo = discoverLogoUrlFromJobPage(fetchResult.htmlPath, input.job_url);
+    if (explicitCompanyLogo) {
+      extracted.logo_url = explicitCompanyLogo;
+    } else if (isLikelyCoverImage(extracted.logo_url)) {
+      extracted.logo_url = undefined;
+    }
+
     const companyFromPage = discoverCompanyFromJobPage(fetchResult.htmlPath);
     if (!input.company && shouldReplaceCompany(extracted.company) && companyFromPage) {
       extracted.company = companyFromPage;
     }
 
-    if (!extracted.logo_url) {
-      extracted.logo_url = discoverLogoUrlFromJobPage(fetchResult.htmlPath, input.job_url);
-    }
     if (!extracted.logo_url) {
       const companyProfileUrl = discoverCompanyProfileUrlFromJobPage(fetchResult.htmlPath, input.job_url);
       if (companyProfileUrl) {
@@ -121,6 +125,11 @@ function discoverLogoUrlFromJobPage(htmlPath: string, pageUrl: string): string |
   const html = readFileSync(htmlPath, 'utf8');
   const $ = load(html);
 
+  const companyLogoField = $('.field--name-field-company-logo').first();
+  const companyLogoFieldImgSrc = companyLogoField.find('img').first().attr('src');
+  const companyLogoFieldImgDataSrc = companyLogoField.find('img').first().attr('data-src');
+  const companyLogoFieldSourceSrcset = companyLogoField.find('source').first().attr('srcset');
+  const companyLogoFieldSourceDataSrcset = companyLogoField.find('source').first().attr('data-srcset');
   const pane = $('.pane-monster-job-logo.pane-node-field-job-logo').first();
   const paneImgSrc = pane.find('img').first().attr('src');
   const paneImgDataSrc = pane.find('img').first().attr('data-src');
@@ -133,6 +142,10 @@ function discoverLogoUrlFromJobPage(htmlPath: string, pageUrl: string): string |
   const companyLogoSourceDataSrcset = companyLogoPane.find('source').first().attr('data-srcset');
 
   const candidates = [
+    companyLogoFieldImgSrc,
+    companyLogoFieldImgDataSrc,
+    firstSrcsetUrl(companyLogoFieldSourceSrcset),
+    firstSrcsetUrl(companyLogoFieldSourceDataSrcset),
     paneImgSrc,
     paneImgDataSrc,
     firstSrcsetUrl(paneSourceSrcset),
@@ -151,7 +164,7 @@ function discoverLogoUrlFromJobPage(htmlPath: string, pageUrl: string): string |
 
   for (const candidate of candidates) {
     const normalized = normalizeImageUrl(candidate, pageUrl);
-    if (normalized) return normalized;
+    if (normalized && !isLikelyCoverImage(normalized)) return normalized;
   }
   return undefined;
 }
@@ -217,4 +230,10 @@ function shouldReplaceCompany(company: string | undefined): boolean {
   if (!company) return true;
   const normalized = company.trim().toLowerCase();
   return normalized === 'jobly' || normalized === 'jobly.fi';
+}
+
+function isLikelyCoverImage(value: string | undefined): boolean {
+  if (!value) return false;
+  const normalized = value.toLowerCase();
+  return normalized.includes('1200x675') || normalized.includes('company-job-image-top') || normalized.includes('field-company-cover');
 }
