@@ -1,4 +1,6 @@
 import {join} from 'path';
+import {readFileSync} from 'fs';
+import {load} from 'cheerio';
 import {ensureJobDir, makeJobKey, writeJson} from '../utils/cache';
 import {validateWithSchema} from '../utils/validate';
 import {fetchHtml} from '../steps/fetch';
@@ -25,6 +27,10 @@ export async function runSingle(input: InputPayload): Promise<RunSingleResult> {
       title: input.title,
       company_site: input.company_site
     });
+
+    if (!extracted.logo_url) {
+      extracted.logo_url = discoverLogoUrlFromJobPage(fetchResult.htmlPath, input.job_url);
+    }
 
     extracted.company_site = normalizePublicUrl(extracted.company_site);
 
@@ -95,6 +101,35 @@ function normalizePublicUrl(value?: string): string | undefined {
     const url = new URL(withProtocol);
     if (!/^https?:$/i.test(url.protocol)) return undefined;
     return url.toString();
+  } catch {
+    return undefined;
+  }
+}
+
+function discoverLogoUrlFromJobPage(htmlPath: string, pageUrl: string): string | undefined {
+  const html = readFileSync(htmlPath, 'utf8');
+  const $ = load(html);
+
+  const candidates = [
+    $('[data-cy="company-logo"] img').attr('src'),
+    $('[data-cy="company-logo"]').attr('src'),
+    $('.company-logo img').attr('src')
+  ];
+
+  for (const candidate of candidates) {
+    const normalized = normalizeImageUrl(candidate, pageUrl);
+    if (normalized) return normalized;
+  }
+  return undefined;
+}
+
+function normalizeImageUrl(value: string | undefined, pageUrl: string): string | undefined {
+  if (!value) return undefined;
+  const cleaned = value.trim();
+  if (!cleaned) return undefined;
+  try {
+    const absolute = new URL(cleaned, pageUrl).toString();
+    return /^https?:\/\//i.test(absolute) ? absolute : undefined;
   } catch {
     return undefined;
   }
