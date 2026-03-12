@@ -17,6 +17,7 @@ export type ArtifactDetail = {
   overrides?: any;
   assets: {
     logo_url?: string | null;
+    logo_version?: string | null;
     video_url?: string | null;
     thumbnail_url?: string | null;
     video_version?: string | null;

@@ -325,7 +325,9 @@ export const App: React.FC = () => {
 
   const previewProps = useMemo(() => {
     if (!detail || !draft) return null;
-    const logoSrc = detail.assets?.logo_url ?? undefined;
+    const logoSrc = detail.assets?.logo_url
+      ? `${detail.assets.logo_url}${detail.assets.logo_version ? `?v=${encodeURIComponent(detail.assets.logo_version)}` : ''}`
+      : undefined;
     const audioSrc = draft.jingle && draft.jingle !== 'random' ? `/assets/jingles/${draft.jingle}` : undefined;
     const lang = detail.extracted?.language ?? 'fi';
     return {

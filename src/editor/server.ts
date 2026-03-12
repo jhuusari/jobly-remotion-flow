@@ -275,6 +275,9 @@ app.get('/api/artifacts/:id', (req, res) => {
   const logoUrl = toPublicPath(artifact.extracted.logo_path);
   const videoUrl = toPublicPath(artifact.video);
   const thumbnailUrl = toPublicPath(artifact.thumbnail);
+  const logoVersion = artifact.extracted.logo_path && existsSync(artifact.extracted.logo_path)
+    ? String(statSync(artifact.extracted.logo_path).mtimeMs)
+    : null;
   const videoVersion = artifact.video && existsSync(artifact.video) ? String(statSync(artifact.video).mtimeMs) : null;
   const thumbnailVersion = artifact.thumbnail && existsSync(artifact.thumbnail) ? String(statSync(artifact.thumbnail).mtimeMs) : null;
 
@@ -285,6 +288,7 @@ app.get('/api/artifacts/:id', (req, res) => {
     overrides: artifact.overrides,
     assets: {
       logo_url: logoUrl,
+      logo_version: logoVersion,
       video_url: videoUrl,
       thumbnail_url: thumbnailUrl,
       video_version: videoVersion,
