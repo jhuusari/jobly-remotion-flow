@@ -3,6 +3,7 @@ import {existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSy
 import {basename, join, relative} from 'path';
 import {applyOverrides, EditorOverrides} from '../utils/editor-overrides';
 import {renderVideo} from '../steps/render';
+import {runSingle} from '../pipeline/run-single';
 
 const app = express();
 const PORT = Number(process.env.EDITOR_PORT ?? 3300);
@@ -381,6 +382,33 @@ app.post('/api/artifacts/:id/regenerate', async (req, res) => {
       video_url: toPublicPath(result.videoPath),
       thumbnail_url: toPublicPath(result.thumbnailPath)
     });
+  } catch (err) {
+    res.status(500).json({error: err instanceof Error ? err.message : String(err)});
+  }
+});
+
+app.post('/api/artifacts/create-from-url', async (req, res) => {
+  const jobUrl = typeof req.body?.job_url === 'string' ? req.body.job_url.trim() : '';
+  const jobId = typeof req.body?.job_id === 'string' ? req.body.job_id.trim() : undefined;
+
+  if (!jobUrl || !/^https?:\/\/.+/i.test(jobUrl)) {
+    res.status(400).json({error: 'job_url is required and must be a valid URL'});
+    return;
+  }
+
+  try {
+    const result = await runSingle({
+      job_url: jobUrl,
+      job_id: jobId || undefined
+    });
+
+    if (result.error) {
+      res.status(500).json({error: result.error});
+      return;
+    }
+
+    rebuildJoblyFeed();
+    res.json({ok: true, result});
   } catch (err) {
     res.status(500).json({error: err instanceof Error ? err.message : String(err)});
   }

@@ -27,6 +27,7 @@ export const App: React.FC = () => {
   const [themeInputs, setThemeInputs] = useState<EditorDraft['theme'] | null>(null);
   const [status, setStatus] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [newJobUrl, setNewJobUrl] = useState('');
   const [bulkProgress, setBulkProgress] = useState<{
     running: boolean;
     total: number;
@@ -167,6 +168,35 @@ export const App: React.FC = () => {
       }
     } catch (err) {
       setStatus(err instanceof Error ? err.message : 'Render failed');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function createFromUrl() {
+    const jobUrl = newJobUrl.trim();
+    if (!jobUrl) {
+      setStatus('Paste a Jobly URL first.');
+      return;
+    }
+    setLoading(true);
+    setStatus('Creating artefact from URL...');
+    try {
+      const res = await fetch('/api/artifacts/create-from-url', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({job_url: jobUrl})
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Create failed');
+      setStatus('Artefact created.');
+      setNewJobUrl('');
+      await fetchArtifacts();
+      if (data?.result?.job_key) {
+        await selectArtifact(String(data.result.job_key));
+      }
+    } catch (err) {
+      setStatus(err instanceof Error ? err.message : 'Create failed');
     } finally {
       setLoading(false);
     }
@@ -330,6 +360,17 @@ export const App: React.FC = () => {
       <div className="layout">
         <aside className="sidebar">
           <div className="sidebar-header">
+            <div className="create-box">
+              <input
+                className="search"
+                placeholder="Create from Jobly URL"
+                value={newJobUrl}
+                onChange={(e) => setNewJobUrl(e.target.value)}
+              />
+              <button className="bulk-primary" onClick={createFromUrl} disabled={loading || !newJobUrl.trim()}>
+                Create New
+              </button>
+            </div>
             <input
               className="search"
               placeholder="Filter by job id, company, title"

@@ -55,6 +55,15 @@ body {
   gap: 12px;
 }
 
+.create-box {
+  display: flex;
+  gap: 8px;
+}
+
+.create-box .search {
+  flex: 1;
+}
+
 .bulk-actions {
   display: flex;
   flex-wrap: wrap;

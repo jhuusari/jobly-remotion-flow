@@ -56,7 +56,7 @@ npm run pipeline:daily
 
 ## Editor (No-Code Review UI)
 
-The editor lets you review artifacts, tweak text + colors, choose a jingle, preview live, regenerate the MP4 + thumbnail, and download the rendered files directly from the editor panel.
+The editor lets you review artifacts, tweak text + colors, choose a jingle, preview live, regenerate the MP4 + thumbnail, download rendered files, and create a new artifact directly from a pasted Jobly URL.
 
 Start the editor (API + UI):
 ```
@@ -84,6 +84,7 @@ When you click Regenerate:
 
 - `GET /api/artifacts` list all artifacts for the left panel
 - `GET /api/artifacts/:id` get extracted + bubbles + overrides + assets
+- `POST /api/artifacts/create-from-url` run full pipeline for one pasted Jobly URL
 - `POST /api/artifacts/:id/reset` remove overrides and revert to original
 - `POST /api/artifacts/bulk-overrides` apply theme + jingle to multiple ids
 - `POST /api/artifacts/:id/regenerate` write overrides and re-render
