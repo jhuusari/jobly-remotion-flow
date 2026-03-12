@@ -92,7 +92,8 @@ async function extractLogoColors(path: string): Promise<BrandColors> {
       .toBuffer({resolveWithObject: true});
 
     const {data, info} = small;
-    const [avgR, avgG, avgB] = averageOpaquePixels(data, info.width, info.height);
+    const accent = detectAccentColor(data, info.width, info.height);
+    const [avgR, avgG, avgB] = accent || averageOpaquePixels(data, info.width, info.height);
     const primary = rgbToHex(avgR, avgG, avgB);
 
     const [bgR, bgG, bgB, bgA] = averageCorners(data, info.width, info.height);
@@ -141,6 +142,40 @@ function averageOpaquePixels(data: Buffer, width: number, height: number): [numb
   }
   if (count === 0) return [140, 191, 26];
   return [Math.round(r / count), Math.round(g / count), Math.round(b / count)];
+}
+
+function detectAccentColor(data: Buffer, width: number, height: number): [number, number, number] | null {
+  let bestScore = -1;
+  let best: [number, number, number] | null = null;
+
+  for (let i = 0; i < width * height; i += 1) {
+    const idx = i * 4;
+    const alpha = data[idx + 3] / 255;
+    if (alpha < 0.5) continue;
+
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+
+    // Ignore near-white and near-black pixels.
+    if (r > 242 && g > 242 && b > 242) continue;
+    if (r < 16 && g < 16 && b < 16) continue;
+
+    const max = Math.max(r, g, b);
+    const min = Math.min(r, g, b);
+    const saturation = max - min;
+    if (saturation < 30) continue;
+
+    const lum = relativeLuminance(r, g, b);
+    // Prefer vivid but not extreme dark/light colors.
+    const score = saturation * (1 - Math.abs(lum - 0.5));
+    if (score > bestScore) {
+      bestScore = score;
+      best = [r, g, b];
+    }
+  }
+
+  return best;
 }
 
 function averageCorners(data: Buffer, width: number, height: number): [number, number, number, number] {
