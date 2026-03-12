@@ -121,8 +121,21 @@ function discoverLogoUrlFromJobPage(htmlPath: string, pageUrl: string): string |
   const html = readFileSync(htmlPath, 'utf8');
   const $ = load(html);
 
+  const pane = $('.pane-monster-job-logo.pane-node-field-job-logo').first();
+  const paneImgSrc = pane.find('img').first().attr('src');
+  const paneImgDataSrc = pane.find('img').first().attr('data-src');
+  const paneSourceSrcset = pane.find('source').first().attr('srcset');
+  const paneSourceDataSrcset = pane.find('source').first().attr('data-srcset');
+
   const candidates = [
+    paneImgSrc,
+    paneImgDataSrc,
+    firstSrcsetUrl(paneSourceSrcset),
+    firstSrcsetUrl(paneSourceDataSrcset),
     $('[data-cy="company-logo"] img').attr('src'),
+    $('[data-cy="company-logo"] img').attr('data-src'),
+    firstSrcsetUrl($('[data-cy="company-logo"] source').first().attr('srcset')),
+    firstSrcsetUrl($('[data-cy="company-logo"] source').first().attr('data-srcset')),
     $('[data-cy="company-logo"]').attr('src'),
     $('.company-logo img').attr('src')
   ];
@@ -144,6 +157,13 @@ function normalizeImageUrl(value: string | undefined, pageUrl: string): string |
   } catch {
     return undefined;
   }
+}
+
+function firstSrcsetUrl(value: string | undefined): string | undefined {
+  if (!value) return undefined;
+  const first = value.split(',')[0]?.trim();
+  if (!first) return undefined;
+  return first.split(/\s+/)[0]?.trim() || undefined;
 }
 
 function discoverCompanyFromJobPage(htmlPath: string): string | undefined {
