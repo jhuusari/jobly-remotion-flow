@@ -126,12 +126,21 @@ function discoverLogoUrlFromJobPage(htmlPath: string, pageUrl: string): string |
   const paneImgDataSrc = pane.find('img').first().attr('data-src');
   const paneSourceSrcset = pane.find('source').first().attr('srcset');
   const paneSourceDataSrcset = pane.find('source').first().attr('data-srcset');
+  const coverPane = $('.pane-entity-field.pane-field-collection-item-field-company-cover.has-logo').first();
+  const coverPaneImgSrc = coverPane.find('img').first().attr('src');
+  const coverPaneImgDataSrc = coverPane.find('img').first().attr('data-src');
+  const coverPaneSourceSrcset = coverPane.find('source').first().attr('srcset');
+  const coverPaneSourceDataSrcset = coverPane.find('source').first().attr('data-srcset');
 
   const candidates = [
     paneImgSrc,
     paneImgDataSrc,
     firstSrcsetUrl(paneSourceSrcset),
     firstSrcsetUrl(paneSourceDataSrcset),
+    coverPaneImgSrc,
+    coverPaneImgDataSrc,
+    firstSrcsetUrl(coverPaneSourceSrcset),
+    firstSrcsetUrl(coverPaneSourceDataSrcset),
     $('[data-cy="company-logo"] img').attr('src'),
     $('[data-cy="company-logo"] img').attr('data-src'),
     firstSrcsetUrl($('[data-cy="company-logo"] source').first().attr('srcset')),
