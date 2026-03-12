@@ -26,13 +26,15 @@ export async function runSingle(input: InputPayload): Promise<RunSingleResult> {
       company_site: input.company_site
     });
 
+    extracted.company_site = normalizePublicUrl(extracted.company_site);
+
     if (!extracted.company_site || extracted.company_site.includes('jobly.fi')) {
       const fromDesc = findUrlInText(extracted.description);
-      if (fromDesc) extracted.company_site = fromDesc;
+      if (fromDesc) extracted.company_site = normalizePublicUrl(fromDesc);
     }
     if (!extracted.company_site || extracted.company_site.includes('jobly.fi')) {
       const discovered = await discoverCompanySite(fetchResult.htmlPath);
-      if (discovered) extracted.company_site = discovered;
+      if (discovered) extracted.company_site = normalizePublicUrl(discovered);
     }
 
     const logo = await downloadLogo(dir, extracted.logo_url);
@@ -82,4 +84,18 @@ function findUrlInText(text: string): string | undefined {
     return url.replace(/[.,;:]+$/, '');
   }
   return undefined;
+}
+
+function normalizePublicUrl(value?: string): string | undefined {
+  if (!value) return undefined;
+  const cleaned = value.trim().replace(/[)\],;:]+$/, '');
+  if (!cleaned) return undefined;
+  const withProtocol = /^https?:\/\//i.test(cleaned) ? cleaned : `https://${cleaned}`;
+  try {
+    const url = new URL(withProtocol);
+    if (!/^https?:$/i.test(url.protocol)) return undefined;
+    return url.toString();
+  } catch {
+    return undefined;
+  }
 }
