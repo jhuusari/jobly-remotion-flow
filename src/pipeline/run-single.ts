@@ -28,8 +28,19 @@ export async function runSingle(input: InputPayload): Promise<RunSingleResult> {
       company_site: input.company_site
     });
 
+    const companyFromPage = discoverCompanyFromJobPage(fetchResult.htmlPath);
+    if (!input.company && shouldReplaceCompany(extracted.company) && companyFromPage) {
+      extracted.company = companyFromPage;
+    }
+
     if (!extracted.logo_url) {
       extracted.logo_url = discoverLogoUrlFromJobPage(fetchResult.htmlPath, input.job_url);
+    }
+    if (!extracted.logo_url) {
+      const companyProfileUrl = discoverCompanyProfileUrlFromJobPage(fetchResult.htmlPath, input.job_url);
+      if (companyProfileUrl) {
+        extracted.logo_url = await discoverLogoFromCompanyProfile(companyProfileUrl);
+      }
     }
 
     extracted.company_site = normalizePublicUrl(extracted.company_site);
@@ -133,4 +144,48 @@ function normalizeImageUrl(value: string | undefined, pageUrl: string): string |
   } catch {
     return undefined;
   }
+}
+
+function discoverCompanyFromJobPage(htmlPath: string): string | undefined {
+  const html = readFileSync(htmlPath, 'utf8');
+  const $ = load(html);
+  const value = $('.pane-node-recruiter-company-profile-job-organization a').first().text().trim();
+  return value || undefined;
+}
+
+function discoverCompanyProfileUrlFromJobPage(htmlPath: string, pageUrl: string): string | undefined {
+  const html = readFileSync(htmlPath, 'utf8');
+  const $ = load(html);
+  const href = $('.pane-node-recruiter-company-profile-job-organization a').first().attr('href');
+  return normalizeImageUrl(href, pageUrl);
+}
+
+async function discoverLogoFromCompanyProfile(companyProfileUrl: string): Promise<string | undefined> {
+  try {
+    const res = await fetch(companyProfileUrl, {
+      headers: {'user-agent': 'remotion-flow/0.1 (company profile logo)'}
+    });
+    if (!res.ok) return undefined;
+    const html = await res.text();
+    const $ = load(html);
+    const candidates = [
+      $('[data-cy="company-logo"] img').attr('src'),
+      $('[data-cy="company-logo"]').attr('src'),
+      $('.company-logo img').attr('src'),
+      $('img[src*="company_logos"]').first().attr('src')
+    ];
+    for (const candidate of candidates) {
+      const normalized = normalizeImageUrl(candidate, companyProfileUrl);
+      if (normalized) return normalized;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+function shouldReplaceCompany(company: string | undefined): boolean {
+  if (!company) return true;
+  const normalized = company.trim().toLowerCase();
+  return normalized === 'jobly' || normalized === 'jobly.fi';
 }
