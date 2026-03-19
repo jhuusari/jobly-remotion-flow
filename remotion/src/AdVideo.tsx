@@ -28,18 +28,17 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
   const logoBg = theme?.logo_bg ?? 'rgba(255,255,255,0.9)';
   const bubbleScale = computeBubbleScale([...expects, ...offers]);
   const backgroundShift = interpolate(frame, [0, durationInFrames], [0, 1], {extrapolateRight: 'clamp'});
+  const backgroundPositionX = `${Math.round(backgroundShift * 100)}%`;
+  const backgroundPositionY = `${Math.round(backgroundShift * 100)}%`;
 
   return (
     <AbsoluteFill style={{...styles.root, background: `linear-gradient(180deg, ${bgStart} 0%, ${bgEnd} 100%)`, color: textColor}}>
       <AbsoluteFill
         style={{
           ...styles.motionLayer,
-          background: [
-            `radial-gradient(circle at 22% 18%, ${toRgba(bgEnd, 0.42)} 0%, rgba(255,255,255,0) 34%)`,
-            `radial-gradient(circle at 82% 72%, ${toRgba(bgStart, 0.30)} 0%, rgba(255,255,255,0) 38%)`,
-            `linear-gradient(160deg, ${toRgba(bgStart, 0.18)} 0%, rgba(255,255,255,0) 52%, ${toRgba(bgEnd, 0.18)} 100%)`
-          ].join(', '),
-          transform: `translate3d(${Math.round(-90 + backgroundShift * 70)}px, ${Math.round(-70 + backgroundShift * 55)}px, 0) scale(${1.08 + backgroundShift * 0.05})`
+          backgroundImage: `radial-gradient(120% 120% at 20% 10%, ${lighten(bgStart, 0.16)} 0%, ${bgStart} 34%, ${bgEnd} 100%)`,
+          backgroundSize: '150% 150%',
+          backgroundPosition: `${backgroundPositionX} ${backgroundPositionY}`
         }}
       />
       {audioSrc ? <Audio src={audioSrc} volume={0.15} /> : null}
@@ -320,6 +319,22 @@ function toRgba(hex: string, alpha: number): string {
   const g = parseInt(normalized.slice(2, 4), 16);
   const b = parseInt(normalized.slice(4, 6), 16);
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+function lighten(hex: string, amount: number): string {
+  const cleaned = hex.replace('#', '');
+  const normalized = cleaned.length === 3
+    ? cleaned.split('').map((char) => `${char}${char}`).join('')
+    : cleaned;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  const mix = (value: number) => Math.round(value + (255 - value) * amount);
+  return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
+}
+
+function toHex(value: number): string {
+  return Math.max(0, Math.min(255, value)).toString(16).padStart(2, '0');
 }
 
 const PinIcon: React.FC<{color: string}> = ({color}) => {
