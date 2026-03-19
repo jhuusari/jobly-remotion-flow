@@ -219,6 +219,7 @@ function buildJoblyFeedItem(artifact: any) {
     company,
     title,
     job_ad_type: jobAdType,
+    channels: 'meta, tiktok',
     video_url: buildPublicUrl(jobId, artifact.video),
     thumbnail_url: buildPublicUrl(jobId, artifact.thumbnail)
   };

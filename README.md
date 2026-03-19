@@ -122,6 +122,7 @@ Each item contains:
 - `company`
 - `title`
 - `job_ad_type` (from the Jobly feed, if available)
+- `channels` (`meta, tiktok`)
 - `video_url`
 - `thumbnail_url`
 
