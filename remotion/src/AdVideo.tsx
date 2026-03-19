@@ -1,5 +1,5 @@
 import React from 'react';
-import {AbsoluteFill, Audio, Img, interpolate, useCurrentFrame} from 'remotion';
+import {AbsoluteFill, Audio, Img, interpolate, useCurrentFrame, useVideoConfig} from 'remotion';
 import {loadFont} from '@remotion/google-fonts/Poppins';
 
 export type AdVideoProps = {
@@ -20,15 +20,28 @@ loadFont();
 
 export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, location, audioSrc, offers, expects, theme, lang, showGuides, showLogoDebug}) => {
   const frame = useCurrentFrame();
+  const {durationInFrames} = useVideoConfig();
   const fade = interpolate(frame, [0, 15], [0, 1], {extrapolateRight: 'clamp'});
   const bgStart = theme?.primary ?? '#8CBF1A';
   const bgEnd = theme?.secondary ?? '#6EA816';
   const textColor = theme?.text ?? '#FFFFFF';
   const logoBg = theme?.logo_bg ?? 'rgba(255,255,255,0.9)';
   const bubbleScale = computeBubbleScale([...expects, ...offers]);
+  const backgroundShift = interpolate(frame, [0, durationInFrames], [0, 1], {extrapolateRight: 'clamp'});
 
   return (
     <AbsoluteFill style={{...styles.root, background: `linear-gradient(180deg, ${bgStart} 0%, ${bgEnd} 100%)`, color: textColor}}>
+      <AbsoluteFill
+        style={{
+          ...styles.motionLayer,
+          background: [
+            `radial-gradient(circle at 22% 18%, ${toRgba(bgEnd, 0.42)} 0%, rgba(255,255,255,0) 34%)`,
+            `radial-gradient(circle at 82% 72%, ${toRgba(bgStart, 0.30)} 0%, rgba(255,255,255,0) 38%)`,
+            `linear-gradient(160deg, ${toRgba(bgStart, 0.18)} 0%, rgba(255,255,255,0) 52%, ${toRgba(bgEnd, 0.18)} 100%)`
+          ].join(', '),
+          transform: `translate3d(${Math.round(-90 + backgroundShift * 70)}px, ${Math.round(-70 + backgroundShift * 55)}px, 0) scale(${1.08 + backgroundShift * 0.05})`
+        }}
+      />
       {audioSrc ? <Audio src={audioSrc} volume={0.15} /> : null}
       <div style={styles.safeArea}>
         <div style={{...styles.card, opacity: fade}}>
@@ -79,10 +92,10 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
 
 const Bubble: React.FC<{text: string; index: number; color: string}> = ({text, index, color}) => {
   const frame = useCurrentFrame();
-  const delay = index * 8;
-  const appear = interpolate(frame, [0 + delay, 20 + delay], [0, 1], {extrapolateRight: 'clamp'});
-  const rise = interpolate(frame, [0 + delay, 26 + delay], [16, 0], {extrapolateRight: 'clamp'});
-  const scale = interpolate(frame, [0 + delay, 24 + delay], [0.95, 1], {extrapolateRight: 'clamp'});
+  const delay = index * 6;
+  const appear = interpolate(frame, [0 + delay, 16 + delay], [0, 1], {extrapolateRight: 'clamp'});
+  const rise = interpolate(frame, [0 + delay, 22 + delay], [16, 0], {extrapolateRight: 'clamp'});
+  const scale = interpolate(frame, [0 + delay, 18 + delay], [0.95, 1], {extrapolateRight: 'clamp'});
   const border = color === '#0B0B0B' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)';
   const background = color === '#0B0B0B' ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.08)';
   return (
@@ -105,7 +118,12 @@ const Bubble: React.FC<{text: string; index: number; color: string}> = ({text, i
 const styles: Record<string, React.CSSProperties> = {
   root: {
     fontFamily: 'Poppins, system-ui, sans-serif',
-    boxSizing: 'border-box'
+    boxSizing: 'border-box',
+    overflow: 'hidden'
+  },
+  motionLayer: {
+    inset: -120,
+    pointerEvents: 'none'
   },
   safeArea: {
     paddingTop: 120,
@@ -291,6 +309,17 @@ function computeBubbleScale(items: string[]): number {
   if (items.length >= 7 || total > 460 || avg > 54) return 0.92;
   if (items.length >= 6 || total > 420 || avg > 48) return 0.95;
   return 1;
+}
+
+function toRgba(hex: string, alpha: number): string {
+  const cleaned = hex.replace('#', '');
+  const normalized = cleaned.length === 3
+    ? cleaned.split('').map((char) => `${char}${char}`).join('')
+    : cleaned;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
 const PinIcon: React.FC<{color: string}> = ({color}) => {

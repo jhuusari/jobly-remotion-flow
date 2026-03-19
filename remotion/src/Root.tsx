@@ -5,7 +5,7 @@ import {AdVideo, AdVideoProps} from './AdVideo';
 const width = 1080;
 const height = 1920;
 const fps = 30;
-const durationInFrames = 180;
+const durationInFrames = 300;
 
 export const RemotionRoot: React.FC = () => {
   return (
