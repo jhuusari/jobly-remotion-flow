@@ -30,17 +30,19 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
   const backgroundShift = interpolate(frame, [0, durationInFrames], [0, 1], {extrapolateRight: 'clamp'});
   const backgroundPositionX = `${Math.round(backgroundShift * 100)}%`;
   const backgroundPositionY = `${Math.round(backgroundShift * 100)}%`;
+  const animatedBackground = `radial-gradient(120% 120% at 20% 10%, ${lighten(bgStart, 0.16)} 0%, ${bgStart} 34%, ${bgEnd} 100%)`;
 
   return (
-    <AbsoluteFill style={{...styles.root, background: `linear-gradient(180deg, ${bgStart} 0%, ${bgEnd} 100%)`, color: textColor}}>
-      <AbsoluteFill
-        style={{
-          ...styles.motionLayer,
-          backgroundImage: `radial-gradient(120% 120% at 20% 10%, ${lighten(bgStart, 0.16)} 0%, ${bgStart} 34%, ${bgEnd} 100%)`,
-          backgroundSize: '150% 150%',
-          backgroundPosition: `${backgroundPositionX} ${backgroundPositionY}`
-        }}
-      />
+    <AbsoluteFill
+      style={{
+        ...styles.root,
+        backgroundColor: bgEnd,
+        backgroundImage: animatedBackground,
+        backgroundSize: '150% 150%',
+        backgroundPosition: `${backgroundPositionX} ${backgroundPositionY}`,
+        color: textColor
+      }}
+    >
       {audioSrc ? <Audio src={audioSrc} volume={0.15} /> : null}
       <div style={styles.safeArea}>
         <div style={{...styles.card, opacity: fade}}>
@@ -119,10 +121,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: 'Poppins, system-ui, sans-serif',
     boxSizing: 'border-box',
     overflow: 'hidden'
-  },
-  motionLayer: {
-    inset: -120,
-    pointerEvents: 'none'
   },
   safeArea: {
     paddingTop: 120,
