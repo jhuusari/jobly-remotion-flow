@@ -28,18 +28,42 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
   const logoBg = theme?.logo_bg ?? 'rgba(255,255,255,0.9)';
   const bubbleScale = computeBubbleScale([...expects, ...offers]);
   const backgroundShift = interpolate(frame, [0, durationInFrames], [0, 1], {extrapolateRight: 'clamp'});
-  const backgroundPositionX = `${Math.round(backgroundShift * 100)}%`;
-  const backgroundPositionY = `${Math.round(backgroundShift * 100)}%`;
-  const animatedBackground = `radial-gradient(120% 120% at 20% 10%, ${lighten(bgStart, 0.16)} 0%, ${bgStart} 34%, ${bgEnd} 100%)`;
+  const reverseShift = interpolate(frame, [0, durationInFrames], [1, 0], {extrapolateRight: 'clamp'});
+  const pulse = interpolate(frame, [0, durationInFrames / 2, durationInFrames], [0, 1, 0], {extrapolateRight: 'clamp'});
+  const backgroundImage = [
+    `radial-gradient(125% 125% at 18% 12%, ${lighten(bgStart, 0.24)} 0%, ${toRgba(bgStart, 0.96)} 38%, transparent 74%)`,
+    `radial-gradient(120% 120% at 84% 82%, ${lighten(bgEnd, 0.18)} 0%, ${toRgba(bgEnd, 0.92)} 34%, transparent 72%)`,
+    `linear-gradient(145deg, ${lighten(bgStart, 0.08)} 0%, ${mixColors(bgStart, bgEnd, 0.48)} 52%, ${bgEnd} 100%)`
+  ].join(', ');
+  const backgroundSize = [
+    `${Math.round(190 + pulse * 24)}% ${Math.round(190 + pulse * 24)}%`,
+    `${Math.round(178 + pulse * 18)}% ${Math.round(178 + pulse * 18)}%`,
+    '100% 100%'
+  ].join(', ');
+  const backgroundPosition = [
+    `${Math.round(10 + backgroundShift * 58)}% ${Math.round(8 + backgroundShift * 54)}%`,
+    `${Math.round(84 - reverseShift * 46)}% ${Math.round(80 - reverseShift * 40)}%`,
+    `${Math.round(45 + backgroundShift * 8)}% ${Math.round(45 + pulse * 6)}%`
+  ].join(', ');
+  const logoReveal = interpolate(frame, [0, 8, 18], [0, 1.06, 1], {extrapolateRight: 'clamp'});
+  const logoRevealY = interpolate(frame, [0, 18], [-36, 0], {extrapolateRight: 'clamp'});
+  const logoRevealOpacity = interpolate(frame, [0, 10], [0, 1], {extrapolateRight: 'clamp'});
+  const logoFloatY = Math.sin((frame / durationInFrames) * Math.PI * 4) * 8;
+  const logoFloatScale = 1 + Math.sin((frame / durationInFrames) * Math.PI * 2) * 0.012;
+  const headerOpacity = interpolate(frame, [4, 18], [0, 1], {extrapolateRight: 'clamp'});
+  const headerY = interpolate(frame, [4, 18], [26, 0], {extrapolateRight: 'clamp'});
+  const headerScale = interpolate(frame, [4, 18], [0.97, 1], {extrapolateRight: 'clamp'});
+  const expectTitleStyle = getSectionIntroStyle(frame, 16, -24);
+  const offerTitleStyle = getSectionIntroStyle(frame, 28, 24);
 
   return (
     <AbsoluteFill
       style={{
         ...styles.root,
         backgroundColor: bgEnd,
-        backgroundImage: animatedBackground,
-        backgroundSize: '150% 150%',
-        backgroundPosition: `${backgroundPositionX} ${backgroundPositionY}`,
+        backgroundImage,
+        backgroundSize,
+        backgroundPosition,
         color: textColor
       }}
     >
@@ -47,7 +71,15 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
       <div style={styles.safeArea}>
         <div style={{...styles.card, opacity: fade}}>
         {logoSrc ? (
-          <div style={{...styles.logoWrap, backgroundColor: logoBg, outline: showLogoDebug ? '2px solid #00ff00' : 'none'}}>
+          <div
+            style={{
+              ...styles.logoWrap,
+              backgroundColor: logoBg,
+              outline: showLogoDebug ? '2px solid #00ff00' : 'none',
+              opacity: logoRevealOpacity,
+              transform: `translateY(${logoRevealY + logoFloatY}px) scale(${logoReveal * logoFloatScale})`
+            }}
+          >
             <div
               style={{
                 ...styles.logoInner,
@@ -60,7 +92,7 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
           </div>
         ) : null}
 
-        <div style={styles.headerGroup}>
+        <div style={{...styles.headerGroup, opacity: headerOpacity, transform: `translateY(${headerY}px) scale(${headerScale})`}}>
           <div style={styles.company}>{company}</div>
           <div style={styles.title}>{title}</div>
           {location ? (
@@ -71,17 +103,17 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
           ) : null}
         </div>
 
-        <div style={styles.sectionTitle}>{lang === 'fi' ? 'Odotamme' : 'We Expect'}</div>
+        <div style={{...styles.sectionTitle, ...expectTitleStyle}}>{lang === 'fi' ? 'Odotamme' : 'We Expect'}</div>
         <div style={{...styles.bubbleRow, transform: `scale(${bubbleScale})`, transformOrigin: 'top center'}}>
           {expects.map((text, idx) => (
-            <Bubble key={`exp-${text}`} text={text} index={idx} color={textColor} />
+            <Bubble key={`exp-${text}`} text={text} index={idx} color={textColor} section="expects" />
           ))}
         </div>
 
-        <div style={styles.sectionTitle}>{lang === 'fi' ? 'Tarjoamme' : 'We Offer'}</div>
+        <div style={{...styles.sectionTitle, ...offerTitleStyle}}>{lang === 'fi' ? 'Tarjoamme' : 'We Offer'}</div>
         <div style={{...styles.bubbleRow, transform: `scale(${bubbleScale})`, transformOrigin: 'top center'}}>
           {offers.map((text, idx) => (
-            <Bubble key={`off-${text}`} text={text} index={idx + expects.length} color={textColor} />
+            <Bubble key={`off-${text}`} text={text} index={idx} color={textColor} section="offers" />
           ))}
         </div>
         </div>
@@ -91,12 +123,13 @@ export const AdVideo: React.FC<AdVideoProps> = ({company, title, logoSrc, locati
   );
 };
 
-const Bubble: React.FC<{text: string; index: number; color: string}> = ({text, index, color}) => {
+const Bubble: React.FC<{text: string; index: number; color: string; section: 'expects' | 'offers'}> = ({text, index, color, section}) => {
   const frame = useCurrentFrame();
-  const delay = index * 6;
-  const appear = interpolate(frame, [0 + delay, 16 + delay], [0, 1], {extrapolateRight: 'clamp'});
-  const rise = interpolate(frame, [0 + delay, 22 + delay], [16, 0], {extrapolateRight: 'clamp'});
-  const scale = interpolate(frame, [0 + delay, 18 + delay], [0.95, 1], {extrapolateRight: 'clamp'});
+  const baseDelay = section === 'expects' ? 16 : 30;
+  const delay = baseDelay + index * 5;
+  const appear = interpolate(frame, [delay, 14 + delay], [0, 1], {extrapolateRight: 'clamp'});
+  const rise = interpolate(frame, [delay, 20 + delay], [20, 0], {extrapolateRight: 'clamp'});
+  const scale = interpolate(frame, [delay, 16 + delay], [0.92, 1], {extrapolateRight: 'clamp'});
   const border = color === '#0B0B0B' ? 'rgba(0,0,0,0.55)' : 'rgba(255,255,255,0.85)';
   const background = color === '#0B0B0B' ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.08)';
   return (
@@ -308,6 +341,16 @@ function computeBubbleScale(items: string[]): number {
   return 1;
 }
 
+function getSectionIntroStyle(frame: number, delay: number, offsetX: number): React.CSSProperties {
+  const opacity = interpolate(frame, [delay, delay + 10], [0, 1], {extrapolateRight: 'clamp'});
+  const translateX = interpolate(frame, [delay, delay + 16], [offsetX, 0], {extrapolateRight: 'clamp'});
+  const scale = interpolate(frame, [delay, delay + 14], [0.97, 1], {extrapolateRight: 'clamp'});
+  return {
+    opacity,
+    transform: `translateX(${translateX}px) scale(${scale})`
+  };
+}
+
 function toRgba(hex: string, alpha: number): string {
   const cleaned = hex.replace('#', '');
   const normalized = cleaned.length === 3
@@ -329,6 +372,25 @@ function lighten(hex: string, amount: number): string {
   const b = parseInt(normalized.slice(4, 6), 16);
   const mix = (value: number) => Math.round(value + (255 - value) * amount);
   return `#${toHex(mix(r))}${toHex(mix(g))}${toHex(mix(b))}`;
+}
+
+function mixColors(a: string, b: string, weight: number): string {
+  const [ar, ag, ab] = toRgb(a);
+  const [br, bg, bb] = toRgb(b);
+  const blend = (start: number, end: number) => Math.round(start + (end - start) * weight);
+  return `#${toHex(blend(ar, br))}${toHex(blend(ag, bg))}${toHex(blend(ab, bb))}`;
+}
+
+function toRgb(hex: string): [number, number, number] {
+  const cleaned = hex.replace('#', '');
+  const normalized = cleaned.length === 3
+    ? cleaned.split('').map((char) => `${char}${char}`).join('')
+    : cleaned;
+  return [
+    parseInt(normalized.slice(0, 2), 16),
+    parseInt(normalized.slice(2, 4), 16),
+    parseInt(normalized.slice(4, 6), 16)
+  ];
 }
 
 function toHex(value: number): string {
