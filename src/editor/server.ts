@@ -3,6 +3,7 @@ import {existsSync, readdirSync, readFileSync, statSync, unlinkSync, writeFileSy
 import {basename, join, relative} from 'path';
 import {applyOverrides, EditorOverrides} from '../utils/editor-overrides';
 import {renderVideo} from '../steps/render';
+import {extractBrandColors} from '../steps/brand';
 import {runSingle} from '../pipeline/run-single';
 
 const app = express();
@@ -200,9 +201,13 @@ function loadLocalFeedIndex() {
 }
 
 function buildPublicUrl(jobId: string, filePath: string | null): string | null {
-  if (!filePath) return null;
-  const file = basename(filePath);
-  return `${OUTPUT_BASE_URL}/${encodeURIComponent(jobId)}/${encodeURIComponent(file)}`;
+  const publicPath = toPublicPath(filePath);
+  if (!publicPath) return null;
+  try {
+    return new URL(publicPath, OUTPUT_BASE_URL).toString();
+  } catch {
+    return publicPath;
+  }
 }
 
 function buildJoblyFeedItem(artifact: any) {
@@ -360,17 +365,24 @@ app.post('/api/artifacts/:id/regenerate', async (req, res) => {
   }
 
   try {
+    const extractedPath = join(artifact.dir, 'extracted.json');
+    const refreshedExtracted = {
+      ...artifact.extracted,
+      brand_colors: await extractBrandColors(artifact.extracted.company_site, artifact.extracted.logo_path)
+    };
+    writeJson(extractedPath, refreshedExtracted);
+
     const result = await renderVideo(
       artifact.dir,
-      join(artifact.dir, 'extracted.json'),
+      extractedPath,
       join(artifact.dir, 'bubbles.json'),
       overrides,
       jinglePath
     );
 
-    const merged = applyOverrides(artifact.extracted, artifact.bubbles, overrides);
+    const merged = applyOverrides(refreshedExtracted, artifact.bubbles, overrides);
     updatePartnerFeed({
-      job_id: artifact.extracted.job_id ?? id,
+      job_id: refreshedExtracted.job_id ?? id,
       job_key: id,
       company: merged.company,
       title: merged.title,
@@ -378,7 +390,7 @@ app.post('/api/artifacts/:id/regenerate', async (req, res) => {
       video_path: result.videoPath,
       thumbnail_path: result.thumbnailPath,
       updated_at: new Date().toISOString(),
-      source_url: artifact.extracted.source_url
+      source_url: refreshedExtracted.source_url
     });
     rebuildJoblyFeed();
 
